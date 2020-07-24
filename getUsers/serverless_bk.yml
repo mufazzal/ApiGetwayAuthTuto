@@ -1,0 +1,56 @@
+service: ServelessAuthDemo
+provider:
+  name: aws
+  stage: beta
+  region: us-east-1  
+  runtime: nodejs12.x
+  profile: Mufazzal_Hussain
+  iamRoleStatements:
+   - Effect: 'Allow'
+     Action:
+      - dynamodb:Scan
+     Resource: 'arn:aws:dynamodb:us-east-1:388412347424:table/MufUser'     
+  
+functions:
+  getUsers:
+    handler: getUsers/src/handler.getUsers
+    layers: 
+     - arn:aws:lambda:us-east-1:388412347424:layer:commonLibs:5
+    package:
+      include:
+       - getUsers/src/**
+    events:
+     - http:
+        path: /getUsersUnAuth
+        method: GET   
+        cors: true
+     - http:
+        path: /getUsersCognitoUserAuth
+        method: GET
+        cors: true
+        authorizer:
+         arn: arn:aws:cognito-idp:us-east-1:388412347424:userpool/us-east-1_d8rcMtMXj
+     - http:
+        path: /getUsersIDPAuth
+        method: GET
+        cors: true
+        authorizer: aws_iam
+     - http:
+        path: /getUsersCustomAuth
+        method: GET   
+        cors: true
+        authorizer: customAuthorizerFunc
+  customAuthorizerFunc:
+    handler: customAuthorizer/src/authorizer.authorizerFunc
+    layers: 
+     - arn:aws:lambda:us-east-1:388412347424:layer:commonLibs:5
+
+package:
+  exclude:
+    - getUsers/node_modules/**  
+    - customAuthorizer/node_modules/**
+
+resources:
+  Resources:
+     
+    
